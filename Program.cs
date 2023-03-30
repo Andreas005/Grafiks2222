@@ -1,7 +1,10 @@
 ﻿using Raylib_cs;
 using System.Numerics;
 
-Raylib.InitWindow(1024, 768, "Topdown Game");
+const int screenwidth = 1024;
+const int screenheight = 768;
+
+Raylib.InitWindow(screenwidth, screenheight, "Topdown Game");
 Raylib.SetTargetFPS(60);
 
 
@@ -39,14 +42,16 @@ Vector2 coinPosition = new Vector2(bitchx, bitchy);
 Rectangle character = new Rectangle(10, 60, avatarImage.width, avatarImage.height);
 Rectangle enemyrect = new Rectangle(700, 500, 64, 64);
 Rectangle Nextlevelblock = new Rectangle(500, 0, 64, 64);
-Rectangle enemyrect2 = new Rectangle(700, 500, 64, 64);
-Rectangle enemyrect3 = new Rectangle(900, 500, 64, 64);
+Rectangle Nextlevelblock2 = new Rectangle(800, 600, 64, 64);
 
-List<Rectangle> enemies = new List<Rectangle>();
 
-enemies.Add(enemyrect2);
-enemies.Add(enemyrect3);
 
+
+
+
+
+Vector2 enemyMovment = new Vector2(1, 0);
+float enemySpeed = 1;
 
 // r  g    b   a  
 Color mycolor = new Color(0, 0, 0, 255);
@@ -57,16 +62,15 @@ string currentscene = "start";
 //   start, game, gameover
 
 string level = "level1";
+enemyObject.loadEnemies();
 
-Vector2 enemyMovment = new Vector2(1, 0);
-float enemyspeed = 4;
 
 float timer = 0;
 
 bool showNextLevelText = false;
 
+bool pickupp = false;
 
-bool plockaupp = false;
 
 
 void coordinates()
@@ -75,10 +79,24 @@ void coordinates()
     enemyrect.y = 300;
     character.x = 10;
     character.y = 60;
+    speed = 9f;
     timer = 0;
     showNextLevelText = false;
 }
 
+
+void level2reset()
+{
+    timer = 0;
+    character.y = 10;
+    character.x = 10;
+    for (int i = 0; i < enemyObject.enemies.Count; i++)
+    {
+        enemyEntity enemy = enemyObject.enemies[i];
+        enemy.enemyRectangle.y = 760;
+    }
+
+}
 
 
 while (Raylib.WindowShouldClose() == false)
@@ -159,7 +177,7 @@ while (Raylib.WindowShouldClose() == false)
             Vector2 enemydirection = Vector2.Normalize(diff);
 
 
-            enemyMovment = enemydirection * enemyspeed;
+            enemyMovment = enemydirection * enemySpeed;
 
             enemyrect.x += enemyMovment.X;
             enemyrect.y += enemyMovment.Y;
@@ -170,12 +188,21 @@ while (Raylib.WindowShouldClose() == false)
             {
 
                 currentscene = "gameover";
+                level = "level1";
+            }
+            if (Raylib.CheckCollisionRecs(character, Nextlevelblock2) && showNextLevelText)
+            {
 
+                currentscene = "congrats";
             }
 
-            if (Raylib.CheckCollisionRecs(character, Nextlevelblock))
+
+
+            if (Raylib.CheckCollisionRecs(character, Nextlevelblock) && showNextLevelText)
             {
                 level = "level2";
+
+
                 // currentscene = "Finallevel";
             }
 
@@ -183,7 +210,7 @@ while (Raylib.WindowShouldClose() == false)
 
             timer += Raylib.GetFrameTime();
 
-            if (timer > 5 && showNextLevelText == false)
+            if (timer > 1 && showNextLevelText == false)
             {
                 showNextLevelText = true;
             }
@@ -194,34 +221,46 @@ while (Raylib.WindowShouldClose() == false)
 
 
 
+
+
             if (currentscene == "game")
             {
 
-                if (character.x >= 945)
+                if (character.x >= 945 || character.x <= 0 || character.y >= 690 || character.y <= 0)
                 {
+                    level2reset();
                     currentscene = "gameover";
+                    level = "level2";
                 }
-                else if (character.x <= 0)
-                {
-                    currentscene = "gameover";
-                }
-                else if (character.y >= 690)
-                {
-                    currentscene = "gameover";
-                }
-                else if (character.y <= 0)
-
                 // om man går går ut så dör man.
 
+
+                // om man går ut ur fönstret så dör man      
+
+                if (level == "level2")
                 {
-                    currentscene = "gameover";
+                    for (int i = 0; i < enemyObject.enemies.Count; i++)
+                    {
+                        enemyEntity enemy = enemyObject.enemies[i];
+                        if (Raylib.CheckCollisionRecs(enemy.enemyRectangle, character))
+                        {
+                            currentscene = "gameover";
+                            level2reset();
+                            break;
+                        }
+
+                    }
+                    if (Raylib.CheckCollisionRecs(character, Nextlevelblock2) && showNextLevelText)
+                    {
+
+                        currentscene = "congrats";
+                    }
                 }
-                // om man går ut ur fönstret så dör man            
 
             }
             if (Raylib.CheckCollisionCircleRec(coinPosition, 20, character))
             {
-                speed += 10;
+                speed += 1;
 
                 bitchx = generator.Next(0, 1025);
                 bitchy = generator.Next(0, 769);
@@ -234,6 +273,7 @@ while (Raylib.WindowShouldClose() == false)
 
 
         }
+
 
     }
     else if (currentscene == "start")
@@ -280,30 +320,57 @@ while (Raylib.WindowShouldClose() == false)
 
         else if (level == "level2")
         {
+
+
+
+            Raylib.ClearBackground(Color.BLACK);
             // (Raylib.CheckCollisionRecs(character, )
             // Raylib.DrawCircle(80, 90, 20,Color.GOLD);
 
-            if (plockaupp == false)
+
+
+
+            for (int i = 0; i < enemyObject.enemies.Count; i++)
+            {
+
+                enemyEntity enemy = enemyObject.enemies[i];
+
+                enemy.enemyRectangle.y += enemy.speed;
+
+                if (enemy.enemyRectangle.y > screenheight)
+                {
+                    Console.WriteLine("TURN");
+                    enemy.speed = -10;
+                }
+                if (enemy.enemyRectangle.y < 0)
+                {
+                    Console.WriteLine("RETURN");
+                    enemy.speed = 10;
+                }
+
+
+                Raylib.DrawRectangleRec(enemy.enemyRectangle, Color.RED);
+                Raylib.DrawRectangleRec(Nextlevelblock2, Color.PINK);
+
+            }
+
+
+            if (pickupp == false)
             {
 
                 Raylib.DrawCircleV(coinPosition, 20, Color.GOLD);
             }
-
-
         }
-
-
-
-       
 
         Raylib.DrawTexture(avatarImage,
          (int)character.x,
           (int)character.y,
               Color.WHITE);
-
-
-
     }
+
+
+
+
 
 
     else if (currentscene == "congrats")
@@ -334,9 +401,9 @@ while (Raylib.WindowShouldClose() == false)
         Raylib.DrawTexture(background, 0, 0, Color.WHITE);
 
         Raylib.DrawText(" Press ENTER to start", 250, 100, 32, mycolor);
-         Raylib.DrawText("dont touch the grass or the walls or = gameover", 250, 300, 30, Color.BLACK);
-         Raylib.DrawText("you move by pressing w,a,s,d", 250, 400, 30, Color.BLACK);
-         Raylib.DrawText("avoid hitting the red rectangle", 250, 400, 30, Color.BLACK);
+        Raylib.DrawText("dont touch the grass or the walls or = gameover", 250, 300, 30, Color.BLACK);
+        Raylib.DrawText("you move by pressing w,a,s,d", 250, 400, 30, Color.BLACK);
+        Raylib.DrawText("avoid hitting the red rectangle", 250, 600, 30, Color.BLACK);
 
 
     }
@@ -351,6 +418,7 @@ while (Raylib.WindowShouldClose() == false)
     Raylib.EndDrawing();
 
 }
+
 
 /*
 x Begränsa förflyttning
