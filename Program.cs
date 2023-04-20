@@ -10,7 +10,7 @@ Raylib.SetTargetFPS(60);
 
 Texture2D backgroundgamescreen1 = Raylib.LoadTexture("background2.png");
 Texture2D background = Raylib.LoadTexture("background2.png");
-
+Texture2D winbackground = Raylib.LoadTexture("background2.png");
 
 float speed = 9f;
 
@@ -255,6 +255,9 @@ while (Raylib.WindowShouldClose() == false)
 
                         currentscene = "congrats";
                     }
+                    if(Raylib.CheckCollisionRecs(Nextlevelblock2, character)){
+                        currentscene = "congrats";
+                    }
                 }
 
             }
@@ -376,9 +379,10 @@ while (Raylib.WindowShouldClose() == false)
     else if (currentscene == "congrats")
     {
 
-        Raylib.DrawTexture(background, 0, 0, Color.WHITE);
-
-
+       
+          Raylib.DrawText("CONGRATS", 100, 300, 128, Color.BLACK);
+ 
+ 
 
         coordinates();
         if (Raylib.IsKeyDown(KeyboardKey.KEY_ENTER))
